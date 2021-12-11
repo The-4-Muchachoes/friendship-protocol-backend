@@ -19,7 +19,8 @@ public class Friendship {
             PENDING = "PENDING",
             FRIENDS = "FRIENDS",
             DENIED = "DENIED",
-            BLOCKED = "BLOCKED";
+            BLOCKED = "BLOCKED",
+            BLOCKED_BY_DEST = "BLOCKED_BY_DEST";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

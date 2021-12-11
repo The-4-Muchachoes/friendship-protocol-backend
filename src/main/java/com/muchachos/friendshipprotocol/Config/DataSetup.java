@@ -18,9 +18,9 @@ public class DataSetup implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        User me = new User("me@email.com");
-        User you = new User("you@email.com");
-
-        userRepo.saveAll(List.of(me, you));
+//        User me = new User("me@email.com");
+//        User you = new User("you@email.com");
+//
+//        userRepo.saveAll(List.of(me, you));
     }
 }

@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface FriendshipRepo extends JpaRepository<Friendship, Long> {
 
     List<Friendship> findFriendshipsByUser(User user);
+    List<Friendship> findFriendshipsByUserAndStatus(User user, String status);
     Optional<Friendship> findFriendshipsByUser_EmailAndFriend_Email(String userEmail, String friendEmail);
     boolean existsByUser_EmailAndFriend_Email(String userEmail, String friendEmail);
 }

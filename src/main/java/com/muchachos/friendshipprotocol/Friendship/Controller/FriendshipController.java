@@ -1,9 +1,6 @@
 package com.muchachos.friendshipprotocol.Friendship.Controller;
 
-import com.muchachos.friendshipprotocol.Config.StaticStrings.StatusCode;
 import com.muchachos.friendshipprotocol.Friendship.DTO.FriendshipDTO;
-import com.muchachos.friendshipprotocol.Friendship.DTO.FriendshipRequest;
-import com.muchachos.friendshipprotocol.Friendship.DTO.FriendshipResponse;
 import com.muchachos.friendshipprotocol.Friendship.Service.FriendshipService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,12 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping(path = "/friendship")
-public class FriendshipRequestController {
+@CrossOrigin
+@RequestMapping(path = "/api/friendrequests")
+public class FriendshipController {
 
     private final FriendshipService friendshipService;
 
-    public FriendshipRequestController(FriendshipService friendshipService) {
+    public FriendshipController(FriendshipService friendshipService) {
         this.friendshipService = friendshipService;
     }
 
@@ -38,20 +36,6 @@ public class FriendshipRequestController {
         }
 
         return friendshipService.handleFriendshipRequestFromClient(request);
-    }
-
-    @PostMapping
-    private ResponseEntity<?> friendshipRequest(@RequestBody FriendshipRequest request) {
-
-        FriendshipDTO dto = FriendshipRequest.mapToFriendshipDTO(request);
-
-        if (dto == null)
-            return ResponseEntity.ok(new FriendshipResponse(
-                    FriendshipDTO.VERSION,
-                    StatusCode.ERROR_PARAMETER,
-                    "Error: Invalid protocol parameters"));
-
-        return friendshipService.handleFriendshipRequestFromRemoteHost(dto);
     }
 
     private void checkRequest(FriendshipDTO request, String method) {

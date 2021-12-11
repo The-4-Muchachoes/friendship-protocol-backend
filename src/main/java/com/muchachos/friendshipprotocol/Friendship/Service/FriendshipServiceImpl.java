@@ -136,7 +136,7 @@ public class FriendshipServiceImpl implements FriendshipService {
                 } else throw new ResponseStatusException(
                         HttpStatus.FORBIDDEN, "Error: You do not have permission to perform this action");
 
-            }
+            } else friendship.setStatus(Friendship.PENDING);
         } else friendship = new Friendship(Friendship.PENDING, user, friend, isRemoteHost);
 
         // Save friendship
@@ -210,7 +210,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
             case "BLOCK":
                 String friend = isRemoteHost ? dto.getSrc() : dto.getDest();
-                friendship.setStatus("BLOCKED");
+                friendship.setStatus(isRemoteHost ? Friendship.BLOCKED_BY_DEST : Friendship.BLOCKED);
                 message = "Success: User " + friend + " has been blocked";
                 break;
 
