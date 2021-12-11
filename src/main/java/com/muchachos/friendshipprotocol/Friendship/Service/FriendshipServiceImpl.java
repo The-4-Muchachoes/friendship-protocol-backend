@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 @Service
@@ -41,6 +42,11 @@ public class FriendshipServiceImpl implements FriendshipService {
         this.friendRepo = friendRepo;
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;
+    }
+
+    @Override
+    public boolean userExistsByEmail(String email) {
+        return userRepo.existsByEmail(email);
     }
 
     @Override
@@ -103,21 +109,19 @@ public class FriendshipServiceImpl implements FriendshipService {
 
         Friendship friendship;
 
-        if (!userRepo.existsByEmail(dto.getSrc())) {
-
-            // Response depending on if request is from other server or from client
-            if (isRemoteHost) {
+        // Checks if user exists when the request came from a remote host.
+        // This check is performed earlier when a request comes from the client
+        if (isRemoteHost)
+            if (!userRepo.existsByEmail(dto.getSrc()))
                 return ResponseEntity.ok(new FriendshipResponse(
                         FriendshipDTO.VERSION,
                         StatusCode.ERROR_COMMAND,
-                        "Error: No user found by that email"));
-            } else throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found by that email");
-        }
+                        "No user found by that email at " + FriendshipDTO.HOST.replace("http://", "")));
 
-        User user = userRepo.findByEmail(dto.getSrc()).orElseThrow();
+        User user = userRepo.findByEmail(dto.getSrc()).orElseThrow(); // should never throw due to earlier checks
         Friend friend = getFriend(new Friend(dto.getDest(), dto.getDestHost()));
 
-        // Check if action can be performed if the friendship already exists, else creates new friendship
+        // Check if action can be performed if the friendship already exists, else create new friendship
         if (friendshipRepo.existsByUser_EmailAndFriend_Email(dto.getSrc(), dto.getDest())) {
             friendship = friendshipRepo
                     .findFriendshipsByUser_EmailAndFriend_Email(dto.getSrc(), dto.getDest())
@@ -131,10 +135,10 @@ public class FriendshipServiceImpl implements FriendshipService {
                     return ResponseEntity.ok(new FriendshipResponse(
                             FriendshipDTO.VERSION,
                             StatusCode.ACCESS_DENIED,
-                            "Error: You do not have permission to perform this action"));
+                            "You have already added this person to your friend list"));
 
                 } else throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Error: You do not have permission to perform this action");
+                        HttpStatus.FORBIDDEN, "You have already added this person to your friend list");
 
             } else friendship.setStatus(Friendship.PENDING);
         } else friendship = new Friendship(Friendship.PENDING, user, friend, isRemoteHost);
@@ -292,6 +296,7 @@ public class FriendshipServiceImpl implements FriendshipService {
         FriendshipRequest request = new FriendshipRequest(dto);
 
         String api = dto.getDestHost() + API.REQUEST;
+
         ResponseEntity<String> response;
 
         try {
@@ -299,20 +304,26 @@ public class FriendshipServiceImpl implements FriendshipService {
             response = restTemplate.postForEntity(api, request, String.class);
 
         } catch (RestClientException e) {
-            if (e.getMessage().contains("Connection refused"))
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid host");
-            else
+
+            if (Objects.requireNonNull(e.getMessage()).contains("Connection refused") ||
+                    e.getMessage().contains("UnknownHostException") ||
+                    e.getMessage().contains("Not Found"))
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, ExceptionMessage.HOST_NOT_FOUND);
+
+            else {
                 throw new ResponseStatusException(
                         HttpStatus.EXPECTATION_FAILED, ExceptionMessage.UNEXPECTED_RESPONSE);
+            }
 
         } catch (HttpMessageConversionException e) {
             throw new ResponseStatusException(
                     HttpStatus.EXPECTATION_FAILED, ExceptionMessage.UNEXPECTED_RESPONSE);
         }
 
-        if (response.getStatusCode() != HttpStatus.OK)
+        if (response.getStatusCode() != HttpStatus.OK) {
             throw new ResponseStatusException(
                     HttpStatus.EXPECTATION_FAILED, ExceptionMessage.UNEXPECTED_RESPONSE);
+        }
 
         return response;
     }

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface FriendshipService {
 
+    boolean userExistsByEmail(String email);
     Friend getFriend(Friend friend);
     ResponseEntity<?> handleFriendshipRequestFromClient(FriendshipDTO request);
     ResponseEntity<?> handleFriendshipRequestFromRemoteHost(FriendshipDTO dto);
