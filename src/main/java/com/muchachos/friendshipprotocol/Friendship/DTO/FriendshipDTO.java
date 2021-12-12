@@ -12,7 +12,7 @@ import java.util.List;
 public class FriendshipDTO {
 
     public static final List<String> VALID_METHODS = List.of("ADD", "ACCEPT", "DENY", "REMOVE", "BLOCK");
-    public static final String HOST = "http://localhost:8080";
+    public static final String HOST = "http://fsps.jazzymcjazz.dk";
     public static final String VERSION = "1";
 
     private String method;
